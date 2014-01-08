@@ -803,6 +803,7 @@ int kgsl_pwrscale_init(struct device *dev, const char *governor)
 		data->bus.num = out;
 		data->bus.ib = &pwr->bus_ib[0];
 		data->bus.index = &pwr->bus_index[0];
+		data->bus.width = pwr->bus_width;
 	} else
 		data->bus.num = 0;
 
