@@ -40,7 +40,7 @@ find ./ -name '*~' | xargs rm
 # rm compile.log
 
 # make kernel
-make 'elite_defconfig'
+make 'angler_defconfig'
 make -j`grep 'processor' /proc/cpuinfo | wc -l` CROSS_COMPILE=$TOOLCHAIN #>> compile.log 2>&1 || exit -1
 
 # Grab zImage-dtb
