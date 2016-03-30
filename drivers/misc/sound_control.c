@@ -13,15 +13,20 @@
 #include <linux/sound_control.h>
 #include "../../sound/soc/codecs/wcd9xxx-common.h"
 
+#define SOUNDCONTROL_VERSION 0
+extern void update_headphones_volume_boost(int vol_boost);
+extern void update_mic_gain(int vol_boost);
+extern int high_perf_mode;
+
 #define MAX_VALUE 20
 
 /*
- * Heaphones
+ * Volume boost value
  */
 unsigned int headphones_boost = 0;
 
 /*
- * Mic
+ * Mic boost value
  */
 unsigned int mic_boost = 0;
 
@@ -39,7 +44,7 @@ unsigned int speaker_r_boost = 0;
 /*
  * Sysfs get/set entries
  */
-
+ 
 static ssize_t headphones_boost_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
@@ -170,6 +175,11 @@ static ssize_t speaker_r_boost_show(struct device *dev,
         return sprintf(buf, "%d\n", speaker_r_boost);
 }
 
+static ssize_t soundcontrol_version(struct device * dev, struct device_attribute * attr, char * buf)
+{
+        return sprintf(buf, "%d\n", speaker_r_boost);
+}
+
 static ssize_t speaker_r_boost_store(struct device *dev,
                 struct device_attribute *attr, const char *buf, size_t size)
 {
@@ -209,12 +219,12 @@ static struct attribute *soundcontrol_attributes[] =
 	NULL
 };
 
-static struct attribute_group soundcontrol_group =
+static struct attribute_group soundcontrol_group = 
 {
 	.attrs  = soundcontrol_attributes,
 };
 
-static struct miscdevice soundcontrol_device =
+static struct miscdevice soundcontrol_device = 
 {
 	.minor = MISC_DYNAMIC_MINOR,
 	.name = "soundcontrol",
@@ -227,12 +237,12 @@ static void __exit soundcontrol_exit(void)
 
 static int __init soundcontrol_init(void)
 {
-	int ret;
+    int ret;
 
 	pr_info("%s misc_register(%s)\n", __func__,
 		soundcontrol_device.name);
 
-	ret = misc_register(&soundcontrol_device);
+    ret = misc_register(&soundcontrol_device);
 
 	if (ret) {
 		pr_err("%s misc_register(%s) fail\n", __func__,
@@ -240,14 +250,14 @@ static int __init soundcontrol_init(void)
 		return -EINVAL;
 	}
 
-	if (sysfs_create_group(&soundcontrol_device.this_device->kobj,
+    if (sysfs_create_group(&soundcontrol_device.this_device->kobj,
 			&soundcontrol_group) < 0) {
 		pr_err("%s sysfs_create_group fail\n", __func__);
 		pr_err("Failed to create sysfs group for device (%s)!\n",
 			soundcontrol_device.name);
 	}
 
-	return 0;
+    return 0;
 }
 late_initcall(soundcontrol_init);
 module_exit(soundcontrol_exit);
