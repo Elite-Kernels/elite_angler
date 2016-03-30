@@ -70,4 +70,3 @@ obj-y				+= qcom/
 obj-$(CONFIG_UID_CPUTIME) += uid_cputime.o
 obj-$(CONFIG_WIFI_SAR) += wifi-sar.o
 obj-$(CONFIG_SOUND_CONTROL_HAX_3_GPL) += sound_control.o
-obj-y				+= volume_control.o
