@@ -1,6 +1,5 @@
 /*
- * Copyright 2015-2016 Francisco Franco
- * franciscofranco.1990@gmail.com
+ * Copyright 2013 Francisco Franco
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -10,7 +9,6 @@
 #include <linux/init.h>
 #include <linux/device.h>
 #include <linux/miscdevice.h>
-#include <linux/sound_control.h>
 #include "../../sound/soc/codecs/wcd9xxx-common.h"
 
 #define SOUNDCONTROL_VERSION 0
@@ -18,28 +16,19 @@ extern void update_headphones_volume_boost(int vol_boost);
 extern void update_mic_gain(int vol_boost);
 extern int high_perf_mode;
 
-#define MAX_VALUE 20
-
 /*
  * Volume boost value
  */
-unsigned int headphones_boost = 0;
+int headphones_boost = 0;
+int headphones_boost_limit = 20;
+int headphones_boost_limit_min = -20;
 
 /*
  * Mic boost value
  */
-unsigned int mic_boost = 0;
-
-/*
- * Camera mic
- */
-unsigned int camera_mic_boost = 0;
-
-/*
- * Speakers
- */
-unsigned int speaker_l_boost = 0;
-unsigned int speaker_r_boost = 0;
+int mic_boost = 0;
+int mic_boost_limit = 20;
+int mic_boost_limit_min = -20;
 
 /*
  * Sysfs get/set entries
@@ -54,18 +43,23 @@ static ssize_t headphones_boost_show(struct device *dev,
 static ssize_t headphones_boost_store(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t size)
 {
-	int ret;
-	unsigned long val;
+	int new_val;
 
-	ret = kstrtoul(buf, 0, &val);
-	if (ret < 0)
-		return ret;
+	sscanf(buf, "%d", &new_val);
 
-	headphones_boost = val > MAX_VALUE ? MAX_VALUE : val;
+	if (new_val != headphones_boost) {
+		if (new_val <= headphones_boost_limit_min)
+			new_val = headphones_boost_limit_min;
 
-	update_headphones_volume_boost(headphones_boost);
+		else if (new_val >= headphones_boost_limit)
+			new_val = headphones_boost_limit;
 
-	pr_info("%s: %d\n", __func__, headphones_boost);
+		pr_info("New headphones_boost: %d\n", new_val);
+
+		headphones_boost = new_val;
+		update_headphones_volume_boost(headphones_boost);
+	}
+
 	return size;
 }
 
@@ -78,43 +72,24 @@ static ssize_t mic_boost_show(struct device *dev,
 static ssize_t mic_boost_store(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t size)
 {
-	int ret;
-        unsigned long val;
+	int new_val;
 
-        ret = kstrtoul(buf, 0, &val);
-        if (ret < 0)
-                return ret;
+	sscanf(buf, "%d", &new_val);
 
-        mic_boost = val > MAX_VALUE ? MAX_VALUE : val;
+	if (new_val != mic_boost) {
+		if (new_val <= mic_boost_limit_min)
+			new_val = mic_boost_limit_min;
 
-        update_mic_gain(mic_boost);
+		else if (new_val >= mic_boost_limit)
+			new_val = mic_boost_limit;
 
-        pr_info("%s: %d\n", __func__, mic_boost);
-        return size;
-}
+		pr_info("New mic_boost: %d\n", new_val);
 
-static ssize_t camera_mic_boost_show(struct device *dev,
-		struct device_attribute *attr, char *buf)
-{
-	return sprintf(buf, "%d\n", camera_mic_boost);
-}
+		mic_boost = new_val;
+		update_mic_gain(mic_boost);
+	}
 
-static ssize_t camera_mic_boost_store(struct device *dev,
-		struct device_attribute *attr, const char *buf, size_t size)
-{
-	int ret;
-        unsigned long val;
-
-        ret = kstrtoul(buf, 0, &val);
-        if (ret < 0)
-                return ret;
-
-        camera_mic_boost = val > MAX_VALUE ? MAX_VALUE : val;
-
-        update_camera_mic_gain(camera_mic_boost);
-
-        pr_info("%s: %d\n", __func__, camera_mic_boost);
-        return size;
+	return size;
 }
 
 static ssize_t hph_perf_show(struct device *dev,
@@ -130,72 +105,16 @@ static ssize_t hph_perf_show(struct device *dev,
 static ssize_t hph_perf_store(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t count)
 {
-	int ret;
-        unsigned long val;
+	if (buf[0] >= '0' && buf[0] <= '1' && buf[1] == '\n')
+		if (high_perf_mode != buf[0] - '0')
+			high_perf_mode = buf[0] - '0';
 
-        ret = kstrtoul(buf, 0, &val);
-        if (ret < 0)
-                return ret;
-
-        speaker_l_boost = val > MAX_VALUE ? MAX_VALUE : val;
-
-        update_speakers_l_gain(speaker_l_boost);
-
-        pr_info("%s: %d\n", __func__, speaker_l_boost);
-        return size;
-}
-
-static ssize_t speaker_l_boost_show(struct device *dev,
-		struct device_attribute *attr, char *buf)
-{
-	return sprintf(buf, "%d\n", speaker_l_boost);
-}
-
-static ssize_t speaker_l_boost_store(struct device *dev,
-		struct device_attribute *attr, const char *buf, size_t size)
-{
-	int ret;
-        unsigned long val;
-
-        ret = kstrtoul(buf, 0, &val);
-        if (ret < 0)
-                return ret;
-
-        speaker_l_boost = val > MAX_VALUE ? MAX_VALUE : val;
-
-        update_speakers_l_gain(speaker_l_boost);
-
-        pr_info("%s: %d\n", __func__, speaker_l_boost);
-        return size;
-}
-
-static ssize_t speaker_r_boost_show(struct device *dev,
-                struct device_attribute *attr, char *buf)
-{
-        return sprintf(buf, "%d\n", speaker_r_boost);
+	return count;
 }
 
 static ssize_t soundcontrol_version(struct device * dev, struct device_attribute * attr, char * buf)
 {
-        return sprintf(buf, "%d\n", speaker_r_boost);
-}
-
-static ssize_t speaker_r_boost_store(struct device *dev,
-                struct device_attribute *attr, const char *buf, size_t size)
-{
-	int ret;
-        unsigned long val;
-
-        ret = kstrtoul(buf, 0, &val);
-        if (ret < 0)
-                return ret;
-
-        speaker_r_boost = val > MAX_VALUE ? MAX_VALUE : val;
-
-        update_speakers_r_gain(speaker_r_boost);
-
-        pr_info("%s: %d\n", __func__, speaker_r_boost);
-        return size;
+    return sprintf(buf, "%d\n", SOUNDCONTROL_VERSION);
 }
 
 static DEVICE_ATTR(volume_boost, 0664, headphones_boost_show,
@@ -203,9 +122,6 @@ static DEVICE_ATTR(volume_boost, 0664, headphones_boost_show,
 static DEVICE_ATTR(mic_boost, 0664, mic_boost_show, mic_boost_store);
 static DEVICE_ATTR(highperf_enabled, 0664, hph_perf_show, hph_perf_store);
 static DEVICE_ATTR(version, 0664 , soundcontrol_version, NULL);
-static DEVICE_ATTR(camera_mic_boost, 0664, camera_mic_boost_show, camera_mic_boost_store);
-static DEVICE_ATTR(speaker_l_boost, 0664, speaker_l_boost_show, speaker_l_boost_store);
-static DEVICE_ATTR(speaker_r_boost, 0664, speaker_r_boost_show, speaker_r_boost_store);
 
 static struct attribute *soundcontrol_attributes[] =
 {
@@ -213,9 +129,6 @@ static struct attribute *soundcontrol_attributes[] =
 	&dev_attr_mic_boost.attr,
 	&dev_attr_highperf_enabled.attr,
 	&dev_attr_version.attr,
-	&dev_attr_camera_mic_boost.attr,
-	&dev_attr_speaker_l_boost.attr,
-	&dev_attr_speaker_r_boost.attr,
 	NULL
 };
 
@@ -230,34 +143,24 @@ static struct miscdevice soundcontrol_device =
 	.name = "soundcontrol",
 };
 
-static void __exit soundcontrol_exit(void)
-{
-	misc_deregister(&soundcontrol_device);
-}
-
 static int __init soundcontrol_init(void)
 {
     int ret;
 
-	pr_info("%s misc_register(%s)\n", __func__,
-		soundcontrol_device.name);
+    pr_info("%s misc_register(%s)\n", __FUNCTION__, soundcontrol_device.name);
 
     ret = misc_register(&soundcontrol_device);
 
-	if (ret) {
-		pr_err("%s misc_register(%s) fail\n", __func__,
-			soundcontrol_device.name);
-		return -EINVAL;
+    if (ret) {
+	    pr_err("%s misc_register(%s) fail\n", __FUNCTION__, soundcontrol_device.name);
+	    return 1;
 	}
 
-    if (sysfs_create_group(&soundcontrol_device.this_device->kobj,
-			&soundcontrol_group) < 0) {
-		pr_err("%s sysfs_create_group fail\n", __func__);
-		pr_err("Failed to create sysfs group for device (%s)!\n",
-			soundcontrol_device.name);
+    if (sysfs_create_group(&soundcontrol_device.this_device->kobj, &soundcontrol_group) < 0) {
+	    pr_err("%s sysfs_create_group fail\n", __FUNCTION__);
+	    pr_err("Failed to create sysfs group for device (%s)!\n", soundcontrol_device.name);
 	}
 
     return 0;
 }
 late_initcall(soundcontrol_init);
-module_exit(soundcontrol_exit);
