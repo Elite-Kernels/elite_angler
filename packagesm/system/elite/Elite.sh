@@ -77,12 +77,7 @@ echo 500 > /sys/kernel/zen_decision/wake_wait_time
 
 # Set Wakelocks
  # echo 0 > /sys/module/bcmdhd/parameters/wlrx_divide
- echo 8 > /sys/module/bcmdhd/parameters/wlrx_divide
- # echo 0 > /sys/module/bcmdhd/parameters/wlctrl_divide
- echo 8 > /sys/module/bcmdhd/parameters/wlctrl_divide
- # echo 0 > /sys/module/xhci_hcd/parameters/wl_divide
- echo 0 > /sys/module/xhci_hcd/parameters/wl_divide
- echo 0 > /sys/module/smb135x_charger/parameters/use_wlock
+ echo 4 > /sys/module/bcmdhd/parameters/wl_divide
 
 #Key press during suspend for long press functions
 # 0 to disable - 1 to enable
