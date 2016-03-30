@@ -11,12 +11,9 @@
 #include <linux/device.h>
 #include <linux/miscdevice.h>
 #include <linux/sound_control.h>
+#include "../../sound/soc/codecs/wcd9xxx-common.h"
 
 #define MAX_VALUE 20
-/*
- * High Perf Mode
- */
-extern int high_perf_mode;
 
 /*
  * Heaphones
@@ -128,11 +125,19 @@ static ssize_t hph_perf_show(struct device *dev,
 static ssize_t hph_perf_store(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t count)
 {
-	if (buf[0] >= '0' && buf[0] <= '1' && buf[1] == '\n')
-		if (high_perf_mode != buf[0] - '0')
-			high_perf_mode = buf[0] - '0';
+	int ret;
+        unsigned long val;
 
-	return count;
+        ret = kstrtoul(buf, 0, &val);
+        if (ret < 0)
+                return ret;
+
+        speaker_l_boost = val > MAX_VALUE ? MAX_VALUE : val;
+
+        update_speakers_l_gain(speaker_l_boost);
+
+        pr_info("%s: %d\n", __func__, speaker_l_boost);
+        return size;
 }
 
 static ssize_t speaker_l_boost_show(struct device *dev,
@@ -187,6 +192,7 @@ static DEVICE_ATTR(volume_boost, 0664, headphones_boost_show,
 	headphones_boost_store);
 static DEVICE_ATTR(mic_boost, 0664, mic_boost_show, mic_boost_store);
 static DEVICE_ATTR(highperf_enabled, 0664, hph_perf_show, hph_perf_store);
+static DEVICE_ATTR(version, 0664 , soundcontrol_version, NULL);
 static DEVICE_ATTR(camera_mic_boost, 0664, camera_mic_boost_show, camera_mic_boost_store);
 static DEVICE_ATTR(speaker_l_boost, 0664, speaker_l_boost_show, speaker_l_boost_store);
 static DEVICE_ATTR(speaker_r_boost, 0664, speaker_r_boost_show, speaker_r_boost_store);
@@ -196,6 +202,7 @@ static struct attribute *soundcontrol_attributes[] =
 	&dev_attr_volume_boost.attr,
 	&dev_attr_mic_boost.attr,
 	&dev_attr_highperf_enabled.attr,
+	&dev_attr_version.attr,
 	&dev_attr_camera_mic_boost.attr,
 	&dev_attr_speaker_l_boost.attr,
 	&dev_attr_speaker_r_boost.attr,
