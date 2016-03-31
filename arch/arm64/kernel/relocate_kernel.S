@@ -185,6 +185,13 @@ arm64_kexec_kimage_start:
 	.quad	0x0
 
 /*
+ * arm64_kexec_dtb_addr - Physical address of a device tree.
+ */
+.globl arm64_kexec_dtb_addr
+arm64_kexec_dtb_addr:
+	.quad	0x0
+
+/*
  * arm64_kexec_kimage_head - Copy of image->head, the list of kimage entries.
  */
 .globl arm64_kexec_kimage_head
