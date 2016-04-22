@@ -128,8 +128,8 @@ struct qseecom_send_svc_cmd_req {
 enum qseecom_key_management_usage_type {
 	QSEOS_KM_USAGE_DISK_ENCRYPTION = 0x01,
 	QSEOS_KM_USAGE_FILE_ENCRYPTION = 0x02,
-	QSEOS_KM_USAGE_ICE_DISK_ENCRYPTION = 0x03,
-	QSEOS_KM_USAGE_ICE_FILE_ENCRYPTION = 0x04,
+	QSEOS_KM_USAGE_UFS_ICE_DISK_ENCRYPTION = 0x03,
+	QSEOS_KM_USAGE_SDCC_ICE_DISK_ENCRYPTION = 0x04,
 	QSEOS_KM_USAGE_MAX
 };
 
@@ -167,6 +167,22 @@ struct qseecom_save_partition_hash_req {
  */
 struct qseecom_is_es_activated_req {
 	int is_activated; /* out */
+};
+
+/*
+ * struct qseecom_mdtp_cipher_dip_req
+ * @in_buf - input buffer
+ * @in_buf_size - input buffer size
+ * @out_buf - output buffer
+ * @out_buf_size - output buffer size
+ * @direction - 0=encrypt, 1=decrypt
+ */
+struct qseecom_mdtp_cipher_dip_req {
+	uint8_t *in_buf;
+	uint32_t in_buf_size;
+	uint8_t *out_buf;
+	uint32_t out_buf_size;
+	uint32_t direction;
 };
 
 enum qseecom_bandwidth_request_mode {
@@ -292,5 +308,8 @@ extern long qseecom_ioctl(struct file *file,
 
 #define QSEECOM_QTEEC_IOCTL_REQUEST_CANCELLATION_REQ \
 	_IOWR(QSEECOM_IOC_MAGIC, 33, struct qseecom_qteec_modfd_req)
+
+#define QSEECOM_IOCTL_MDTP_CIPHER_DIP_REQ \
+	_IOWR(QSEECOM_IOC_MAGIC, 34, struct qseecom_mdtp_cipher_dip_req)
 
 #endif /* _UAPI_QSEECOM_H_ */

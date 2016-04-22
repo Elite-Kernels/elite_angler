@@ -18,7 +18,10 @@
 		ramoops_mem: ramoops_region@0 {
 			linux,reserve-contiguous-region;
 			linux,reserve-region;
-			reg = <0 0x1fe00000 0 0x00200000>;
+			/* Hardboot: reserve 1MB of space
+			 * before ramoops address of 0x1fe00000
+			 */
+			reg = <0 0x1fd00000 0 0x00300000>;
 			linux,remove-completely;
 			label = "ramoops_mem";
 		};
@@ -40,7 +43,8 @@
 		linux,contiguous-region = <&ramoops_mem>;
 		android,ramoops-hole {
 			compatible = "qcom,msm-contig-mem";
-			qcom,memblock-reserve = <0x1fe00000 0x00200000>;
+			/* Hardboot: reserve 1MB */
+			qcom,memblock-reserve = <0x1fd00000 0x00300000>;
 		};
 	};
 
@@ -220,6 +224,16 @@
 			qcom,s3-debounce = <16>;
 			qcom,s3-src = "kpdpwr";
 		};
+	};
+};
+
+&mdss_mdp {
+	dsi_samsung_s6e3ha3x01_5p7_1440p_cmd_0: qcom,mdss_dsi_dualmipi0_cmd {
+		qcom,mdss-dsi-hbm-on-command = [
+			/* HBM setting in 2 MSB bits of reg 53 */
+			15 01 00 00 00 00 02 53 e0];
+		qcom,mdss-dsi-hbm-off-command = [
+			15 01 00 00 00 00 02 53 20];
 	};
 };
 

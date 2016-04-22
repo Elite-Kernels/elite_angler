@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2013-2015, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -28,6 +28,7 @@
 #define QSEOS_RESULT_FAIL_KEY_ID_DNE          -70
 #define QSEOS_RESULT_FAIL_INCORRECT_PSWD      -71
 #define QSEOS_RESULT_FAIL_MAX_ATTEMPT         -72
+#define QSEOS_RESULT_FAIL_PENDING_OPERATION   -73
 
 enum qseecom_command_scm_resp_type {
 	QSEOS_APP_ID = 0xEE01,
@@ -97,6 +98,12 @@ __packed  struct qsee_apps_region_info_ireq {
 	uint32_t size;
 };
 
+__packed  struct qsee_apps_region_info_64bit_ireq {
+	uint32_t qsee_cmd_id;
+	uint64_t addr;
+	uint32_t size;
+};
+
 __packed struct qseecom_check_app_ireq {
 	uint32_t qsee_cmd_id;
 	char     app_name[MAX_APP_NAME_SIZE];
@@ -108,6 +115,14 @@ __packed struct qseecom_load_app_ireq {
 	uint32_t img_len;		/* Length of .bxx and .mdt files */
 	uint32_t phy_addr;		/* phy addr of the start of image */
 	char     app_name[MAX_APP_NAME_SIZE];	/* application name*/
+};
+
+__packed struct qseecom_load_app_64bit_ireq {
+	uint32_t qsee_cmd_id;
+	uint32_t mdt_len;
+	uint32_t img_len;
+	uint64_t phy_addr;
+	char     app_name[MAX_APP_NAME_SIZE];
 };
 
 __packed struct qseecom_unload_app_ireq {
@@ -122,6 +137,13 @@ __packed struct qseecom_load_lib_image_ireq {
 	uint32_t phy_addr;
 };
 
+__packed struct qseecom_load_lib_image_64bit_ireq {
+	uint32_t qsee_cmd_id;
+	uint32_t mdt_len;
+	uint32_t img_len;
+	uint64_t phy_addr;
+};
+
 __packed struct qseecom_unload_lib_image_ireq {
 	uint32_t qsee_cmd_id;
 };
@@ -130,6 +152,13 @@ __packed struct qseecom_register_listener_ireq {
 	uint32_t qsee_cmd_id;
 	uint32_t listener_id;
 	uint32_t sb_ptr;
+	uint32_t sb_len;
+};
+
+__packed struct qseecom_register_listener_64bit_ireq {
+	uint32_t qsee_cmd_id;
+	uint32_t listener_id;
+	uint64_t sb_ptr;
 	uint32_t sb_len;
 };
 
@@ -147,9 +176,24 @@ __packed struct qseecom_client_send_data_ireq {
 	uint32_t rsp_len;
 };
 
+__packed struct qseecom_client_send_data_64bit_ireq {
+	uint32_t qsee_cmd_id;
+	uint32_t app_id;
+	uint64_t req_ptr;
+	uint32_t req_len;
+	uint64_t rsp_ptr;
+	uint32_t rsp_len;
+};
+
 __packed struct qseecom_reg_log_buf_ireq {
 	uint32_t qsee_cmd_id;
 	uint32_t phy_addr;
+	uint32_t len;
+};
+
+__packed struct qseecom_reg_log_buf_64bit_ireq {
+	uint32_t qsee_cmd_id;
+	uint64_t phy_addr;
 	uint32_t len;
 };
 
@@ -183,6 +227,14 @@ __packed struct qseecom_client_send_service_ireq {
 	unsigned int req_len; /* in */
 	uint32_t rsp_ptr; /* in/out */
 	unsigned int rsp_len; /* in/out */
+};
+
+__packed struct qseecom_client_send_service_64bit_ireq {
+	uint32_t qsee_cmd_id;
+	uint32_t key_type;
+	unsigned int req_len;
+	uint64_t rsp_ptr;
+	unsigned int rsp_len;
 };
 
 __packed struct qseecom_key_generate_ireq {
@@ -235,6 +287,15 @@ __packed struct qseecom_qteec_ireq {
 	uint32_t    resp_len;
 };
 
+__packed struct qseecom_qteec_64bit_ireq {
+	uint32_t    qsee_cmd_id;
+	uint32_t    app_id;
+	uint64_t    req_ptr;
+	uint32_t    req_len;
+	uint64_t    resp_ptr;
+	uint32_t    resp_len;
+};
+
 __packed struct qseecom_client_send_fsm_key_req {
 	uint32_t qsee_cmd_id;
 	uint32_t req_ptr;
@@ -252,6 +313,7 @@ __packed struct qseecom_client_send_fsm_key_req {
 #define TZ_SVC_RPMB                      4     /* RPMB */
 #define TZ_SVC_KEYSTORE                  5     /* Keystore management */
 #define TZ_SVC_ES                        16    /* Enterprise Security */
+#define TZ_SVC_MDTP                      18    /* Mobile Device Theft */
 
 /*----------------------------------------------------------------------------
  * Owning Entity IDs (defined by ARM SMC doc)
@@ -554,6 +616,15 @@ __packed struct qseecom_client_send_fsm_key_req {
 	TZ_SYSCALL_CREATE_PARAM_ID_5(					\
 	TZ_SYSCALL_PARAM_TYPE_VAL, TZ_SYSCALL_PARAM_TYPE_BUF_RW,	\
 	TZ_SYSCALL_PARAM_TYPE_VAL, TZ_SYSCALL_PARAM_TYPE_BUF_RW,	\
+	TZ_SYSCALL_PARAM_TYPE_VAL)
+
+#define TZ_MDTP_CIPHER_DIP_ID \
+	TZ_SYSCALL_CREATE_SMC_ID(TZ_OWNER_SIP, TZ_SVC_MDTP, 0x1)
+
+#define TZ_MDTP_CIPHER_DIP_ID_PARAM_ID \
+	TZ_SYSCALL_CREATE_PARAM_ID_5( \
+	TZ_SYSCALL_PARAM_TYPE_BUF_RO, TZ_SYSCALL_PARAM_TYPE_VAL, \
+	TZ_SYSCALL_PARAM_TYPE_BUF_RW, TZ_SYSCALL_PARAM_TYPE_VAL, \
 	TZ_SYSCALL_PARAM_TYPE_VAL)
 
 #endif /* __QSEECOMI_H_ */
