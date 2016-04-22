@@ -3,7 +3,7 @@
 # Path to build your kernel
   k=~/kernel/eliteangler
 # Directory for the any kernel updater
-  t=$k/packagesm
+  t=$k/packagesn
 # Date to add to zip
   today=$(date +"%m_%d_%Y")
 
@@ -13,7 +13,7 @@
 #     make clean
 
 # Setup the build
- cd $k/arch/arm64/configs/BBKconfigsM
+ cd $k/arch/arm64/configs/BBKconfigsN
     for c in *
       do
         cd $k
