@@ -384,7 +384,11 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
                    -funswitch-loops -fpredictive-commoning -fgcse-after-reload \
 		   -fno-aggressive-loop-optimizations \
 		   -fno-delete-null-pointer-checks \
-                    -std=gnu89
+                   -std=gnu89
+
+# GCC 6.1 is too strict
+KBUILD_CFLAGS	+= -Wno-misleading-indentation -Wno-tautological-compare
+
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
 KBUILD_AFLAGS   := -D__ASSEMBLY__
