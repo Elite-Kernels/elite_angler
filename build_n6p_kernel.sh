@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Path to build your kernel
-  k=/home/lennart/Schreibtisch/Kernel/angler
+  k=~/kernel/eliteangler
 # Directory for the any kernel updater
   t=$k/packagesm
 # Date to add to zip
@@ -28,7 +28,7 @@
 
   z=$c-$today
 
-TOOLCHAIN=/home/lennart/Schreibtisch/Kernel/aarch64-linux-android-4.9/bin/aarch64-linux-android-
+TOOLCHAIN=/home/forrest/kernel/linaro-4.9_aarch64/bin/aarch64-linux-android-
 export ARCH=arm64
 export SUBARCH=arm64
 
