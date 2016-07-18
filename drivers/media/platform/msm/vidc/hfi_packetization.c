@@ -1850,54 +1850,6 @@ int create_pkt_cmd_session_set_property(
 			sizeof(struct hfi_hybrid_hierp);
 		break;
 	}
-	case HAL_PARAM_VENC_VIDEO_SIGNAL_INFO:
-	{
-		u32 color_space, matrix_coeffs, transfer_chars;
-		struct hal_video_signal_info *hal = pdata;
-		struct hfi_video_signal_metadata *signal_info =
-			(struct hfi_video_signal_metadata *)
-			&pkt->rg_property_data[1];
-
-		switch (hal->color_space) {
-		/* See colour_primaries of ISO/IEC 14496 for significance */
-		case HAL_VIDEO_COLOR_SPACE_601:
-			color_space = 5;
-			transfer_chars = 6;
-			matrix_coeffs = 5;
-			break;
-		case HAL_VIDEO_COLOR_SPACE_709:
-			color_space = 1;
-			transfer_chars = 1;
-			matrix_coeffs = 1;
-			break;
-		default:
-			return -ENOTSUPP;
-		}
-
-		signal_info->enable = true;
-		signal_info->video_format = 5;
-		signal_info->video_full_range = !hal->clamped;
-		signal_info->color_description = 1;
-		signal_info->color_primaries = color_space;
-		signal_info->transfer_characteristics = transfer_chars;
-		signal_info->matrix_coeffs = matrix_coeffs;
-
-		pkt->rg_property_data[0] =
-			HFI_PROPERTY_PARAM_VENC_VIDEO_SIGNAL_INFO;
-		pkt->size += sizeof(u32) + sizeof(*signal_info);
-		break;
-	}
-	case HAL_PARAM_VENC_CONSTRAINED_INTRA_PRED:
-	{
-                struct hfi_enable *hfi;
-                struct hal_enable *constr_intra = pdata;
-                pkt->rg_property_data[0] =
-                        HFI_PROPERTY_PARAM_VENC_CONSTRAINED_INTRA_PRED;
-                hfi = (struct hfi_enable *)&pkt->rg_property_data[1];
-                hfi->enable = constr_intra->enable;
-                pkt->size += sizeof(u32) + sizeof(struct hfi_enable);
-		break;
-	}
 	/* FOLLOWING PROPERTIES ARE NOT IMPLEMENTED IN CORE YET */
 	case HAL_CONFIG_BUFFER_REQUIREMENTS:
 	case HAL_CONFIG_PRIORITY:
