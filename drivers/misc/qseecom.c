@@ -3320,7 +3320,6 @@ static int __validate_send_modfd_resp_inputs(struct qseecom_dev_handle *data,
 
 	if (resp->resp_buf_ptr == NULL) {
 		pr_err("resp buffer is null\n");
-<<<<<<< HEAD
 		return -EINVAL;
 	}
 	/* validate resp buf length */
